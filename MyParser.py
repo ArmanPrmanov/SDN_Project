@@ -1,5 +1,5 @@
 from mininet.cli import CLI
-from MyTopo import MyTopo
+from NetworkGraph import NetworkGraph
 
 import networkx as nx
 
@@ -141,16 +141,13 @@ class CustomCLI(CLI):
 
 
 def main():
-    topo = MyTopo(controller_ip=CONTROLLER_IP, controller_port=CONTROLLER_PORT)
-
+    topo = NetworkGraph(controller_ip=CONTROLLER_IP, controller_port=CONTROLLER_PORT)
     topo.create_topo()
     topo.enable_statistics()
     
     net = topo.net
     hosts = topo.hosts
     switches = topo.switches
-    
-    net.start()
     
     # Build the network graph using NetworkX
     G = nx.Graph()
@@ -162,8 +159,6 @@ def main():
     # Use the custom CLI with additional commands
     custom_cli = CustomCLI(net, G, hosts, topo)
     custom_cli.run()
-
-    net.stop()
 
 if __name__ == "__main__":
     main()

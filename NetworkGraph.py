@@ -6,7 +6,7 @@ from mininet.log import setLogLevel, info
 import requests
 import json
 
-class MyTopo:
+class NetworkGraph:
     def __init__(self, controller_ip="127.0.0.1", controller_port="8080"):
         self.CONTROLLER_IP = controller_ip
         self.CONTROLLER_PORT = controller_port
@@ -165,7 +165,7 @@ class MyTopo:
         self.net = Mininet(controller=RemoteController, switch=OVSSwitch)
         
         info('Adding Controller \n')
-        c0 = self.net.addController('c0', ip=self.NEW_IP, port=self.NEW_PORT)
+        c0 = self.net.addController('c0', ip=CONTROLLER_IP)
         
         info('Adding Hosts \n')
         for i in range(0, len(fetched_hosts)):
