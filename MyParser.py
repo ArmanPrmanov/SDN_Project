@@ -1,7 +1,11 @@
 from mininet.cli import CLI
 from NetworkGraph import NetworkGraph
-
+from AppServer import AppServerHandler
 import networkx as nx
+import requests
+from http.server import HTTPServer
+import json
+import threading
 
 # Define the controller's IP and port (assuming it's running locally)
 CONTROLLER_IP = "127.0.0.1"
@@ -138,28 +142,45 @@ class CustomCLI(CLI):
         return None
 
 
+class Framework():
+    def start_server(self):
+        AppServerHandler.MyParser = self
+        server_address = ('127.0.0.1', 8000)
+        httpd = HTTPServer(server_address, AppServerHandler)
+        print(f"Starting AppServer")
+        httpd.serve_forever()
 
 
-def main():
-    topo = NetworkGraph(controller_ip=CONTROLLER_IP, controller_port=CONTROLLER_PORT)
-    topo.create_topo()
-    topo.enable_statistics()
-    
-    net = topo.net
-    hosts = topo.hosts
-    switches = topo.switches
-    
-    # Build the network graph using NetworkX
-    G = nx.Graph()
-    for link in net.links:
-        src = link.intf1.node
-        dst = link.intf2.node
-        G.add_edge(src, dst)
-    
-    # Use the custom CLI with additional commands
-    custom_cli = CustomCLI(net, G, hosts, topo)
-    custom_cli.run()
+    def main(self):
+        # Start the server in a separate thread
+        server_thread = threading.Thread(target=self.start_server)
+        server_thread.daemon = True  # Daemonize thread to stop with main program
+        server_thread.start()
+        print("AppServer started in background.")
+
+        topo = NetworkGraph(controller_ip=CONTROLLER_IP, controller_port=CONTROLLER_PORT)
+        topo.create_topo()
+        topo.enable_statistics()
+        
+        net = topo.net
+        hosts = topo.hosts
+        switches = topo.switches
+        
+        parsed_hosts = topo.parsed_hosts
+        
+        # Build the network graph using NetworkX
+        G = nx.Graph()
+        for link in net.links:
+            src = link.intf1.node
+            dst = link.intf2.node
+            G.add_edge(src, dst)
+        
+        # Use the custom CLI with additional commands
+        custom_cli = CustomCLI(net, G, hosts, topo)
+        custom_cli.run()
+
 
 if __name__ == "__main__":
-    main()
+    framework = Framework()
+    framework.main()
 

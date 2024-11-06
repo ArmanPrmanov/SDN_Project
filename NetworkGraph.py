@@ -1,7 +1,6 @@
 from mininet.net import Mininet
-from mininet.node import Controller, OVSSwitch, RemoteController
-from mininet.cli import CLI
-from mininet.log import setLogLevel, info
+from mininet.node import OVSSwitch, RemoteController
+from mininet.log import info
 
 import requests
 import json
@@ -20,6 +19,8 @@ class NetworkGraph:
         self.net = None
         self.hosts = []
         self.switches = []
+        
+        self.parsed_hosts = []
         self.parsed_links = []
         self.parsed_switches = []
 
@@ -79,7 +80,6 @@ class NetworkGraph:
         hosts = self.fetch_hosts()
         recreated_hosts = []
 
-        #print(hosts)
         for host in hosts:
             if len(host['attachmentPoint']) == 0:
                 continue
@@ -148,28 +148,27 @@ class NetworkGraph:
         fetched_hosts = self.parse_hosts()
         print("Get Hosts:")
         print(json.dumps(fetched_hosts, indent=4))
+        self.parsed_hosts = fetched_hosts
         
         fetched_switches = self.parse_switches()
         print("\Get Switches:")
         print(json.dumps(fetched_switches, indent=4))
-        
         self.parsed_switches = fetched_switches
         
         fetched_links = self.parse_links(fetched_hosts, fetched_switches)
         print("\Get Links:")
         print(json.dumps(fetched_links, indent=4))
-        
         self.parsed_links = fetched_links
 
         info('Creating Network \n')
         self.net = Mininet(controller=RemoteController, switch=OVSSwitch)
         
         info('Adding Controller \n')
-        c0 = self.net.addController('c0', ip=CONTROLLER_IP)
+        c0 = self.net.addController('c0', ip=self.CONTROLLER_IP)
         
         info('Adding Hosts \n')
         for i in range(0, len(fetched_hosts)):
-            h = self.net.addHost(f'd{i+100}', dimage="ubuntu:trusty", cpu_shares=20) #cls=DOCKER
+            h = self.net.addHost(f'd{i+100}', ip=fetched_hosts[i]['ipv4'], dimage="ubuntu:trusty", cpu_shares=20) #cls=DOCKER
             self.hosts.append(h)
             
         info('Adding Switches \n')

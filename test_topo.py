@@ -13,10 +13,10 @@ def topo():
     c0 = net.addController('c0', ip='127.0.0.1', port=6653)
     
     info('Adding Hosts \n')
-    h1 = net.addHost('h1', ip='10.0.0.1/24')
-    h2 = net.addHost('h2', ip='10.0.0.2/24')
-    h3 = net.addHost('h3', ip='10.0.0.3/24')
-    h4 = net.addHost('h4', ip='10.0.0.4/24')
+    h1 = net.addHost('h1', ip='10.0.0.1')
+    h2 = net.addHost('h2', ip='10.0.0.2')
+    h3 = net.addHost('h3', ip='10.0.0.3')
+    h4 = net.addHost('h4', ip='10.0.0.4')
     
     info('Adding Switches \n')
     s1 = net.addSwitch('s1', protocols=SWITCH_PROTOCOL)

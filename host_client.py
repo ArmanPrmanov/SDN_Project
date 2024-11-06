@@ -7,7 +7,7 @@ import sys
 from task import Task
 
 host_priority = random.randint(1, 5)
-app_ip = '127.0.0.1'
+app_ip = '10.0.0.1'
 MEC_ip = '10.0.0.2'
 
 class HostClientHandler(BaseHTTPRequestHandler):
@@ -31,6 +31,15 @@ class HostClientHandler(BaseHTTPRequestHandler):
     def do_create_task(self):
         rand_task_id = random.randint(1,100000)
         task = Task(rand_task_id)
+        return task
+    
+    def do_ask_for_mec(self):
+        task = self.do_create_task()
+        # send request with Task info to Framework
+        # get response from Framework about available MEC server
+        # send request with Task body to MEC server
+        # get response from MEC with Task result
+        
 
 def main(ip='127.0.0.1', port=8000):
     # Check for command-line arguments for IP and port
