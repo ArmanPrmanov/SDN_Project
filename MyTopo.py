@@ -11,6 +11,9 @@ class MyTopo:
         self.CONTROLLER_IP = controller_ip
         self.CONTROLLER_PORT = controller_port
         self.BASE_URL = f"http://{self.CONTROLLER_IP}:{self.CONTROLLER_PORT}"
+
+        self.NEW_IP = "127.0.0.2"
+        self.NEW_PORT = "8080"
         
         self.SWITCH_PROTOCOL = 'OpenFlow13'
         
@@ -162,7 +165,7 @@ class MyTopo:
         self.net = Mininet(controller=RemoteController, switch=OVSSwitch)
         
         info('Adding Controller \n')
-        c0 = self.net.addController('c0', ip='127.0.0.2', port='8080')
+        c0 = self.net.addController('c0', ip=self.NEW_IP, port=self.NEW_PORT)
         
         info('Adding Hosts \n')
         for i in range(0, len(fetched_hosts)):

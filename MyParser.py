@@ -1,6 +1,4 @@
-from mininet.net import Mininet
 from mininet.cli import CLI
-from mininet.log import setLogLevel, info
 from MyTopo import MyTopo
 
 import networkx as nx
