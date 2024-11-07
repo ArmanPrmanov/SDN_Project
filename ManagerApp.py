@@ -1,4 +1,6 @@
-import networkx as nx
+import requests
+import json
+import networkx
 import NetworkGraph
 
 def estimate_data_transfer_latency( task, path ):
@@ -114,3 +116,47 @@ class ManagerApp:
 
     def run( self ):
         TODO
+
+
+
+'''
+ManagerApp side:
+    Status request:
+        POST: https://<ip>:<port>/status_request
+        Data: json object { id = <number>, ip = <address of manager application >
+
+Device side:
+    Status reply:
+        Data: json object { class = 'device', id = <device id#>, priority = <device priority> }
+
+Server(MEC) size:
+    Status reply:
+        Data: json object { class = 'server', id = <server id#>, cpu = <cpu cyles per sec>, mem = <memory> }
+'''
+
+'''
+ManagerApp side:
+    Task list request:
+        POST: https://<ip>:<port>/task_list_request
+
+Device side:
+    Task list reply:
+        Data: json object { 0 = <task1>, 1 = <task2>, ..., n = <taskn> } // list of tasks the device is wigting for
+
+Device side:
+    Task list reply:
+        Data json object { 0 = <task1>, 1 = <task2>, ..., n = <taskn> } // list of tasks the server is assigned
+
+'''
+
+
+'''
+Device side:
+    Resource request:
+        Post: http://<manager application url>/resource_request
+        Data: json object for task { d_id = <device id#>, t_id = <task id#>, input_data_size, output_data_size, cpu_cycles, memory }
+
+ManagerApp side:
+    Resource reply:
+        Data: json object { server_address }
+'''
