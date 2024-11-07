@@ -57,7 +57,7 @@ def topo():
             host.popen(f'python3 host_client.py {ip}')
         else:
             info(f'Starting MEC_server on {host} with IP {ip}\n')
-            host.popen(f'python3 MEC_server.py {ip}')
+            host.popen(f'python3 mec_server.py {ip}')
     
     CLI(net)
     net.stop()

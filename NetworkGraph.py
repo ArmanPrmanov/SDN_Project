@@ -2,6 +2,7 @@ from mininet.net import Mininet
 from mininet.node import OVSSwitch, RemoteController
 from mininet.log import info
 
+import networkx as nx
 import requests
 import json
 
@@ -23,6 +24,8 @@ class NetworkGraph:
         self.parsed_hosts = []
         self.parsed_links = []
         self.parsed_switches = []
+
+        self.G = nx.Graph()
 
     def fetch_hosts(self):
         hosts_url = f"{self.BASE_URL}/wm/device/"
@@ -119,7 +122,7 @@ class NetworkGraph:
 
         return recreated_switches
         
-    def parse_links(self, hosts, switches):
+    def parse_links(self):
         fetched_links = self.fetch_links()
         links = []
         
@@ -155,7 +158,7 @@ class NetworkGraph:
         print(json.dumps(fetched_switches, indent=4))
         self.parsed_switches = fetched_switches
         
-        fetched_links = self.parse_links(fetched_hosts, fetched_switches)
+        fetched_links = self.parse_links()
         print("\Get Links:")
         print(json.dumps(fetched_links, indent=4))
         self.parsed_links = fetched_links
@@ -176,7 +179,7 @@ class NetworkGraph:
             s = self.net.addSwitch(f's{i+100}', protocols=self.SWITCH_PROTOCOL)
             self.switches.append(s)
         
-        info('Adding HSLinks')
+        info('Adding HSLinks \n')
         for i in range(0, len(fetched_hosts)):
             f_h = fetched_hosts[i]
             s_to_connect = self.get_switch_idx_by_id(self.switches, fetched_switches, f_h['switch'])
@@ -186,7 +189,7 @@ class NetworkGraph:
             #print(f"h: {hosts[i].name} connects to switch: {switches[s_to_connect].name} via port: {int(f_h['port'])}")
             self.net.addLink(self.hosts[i], self.switches[s_to_connect], port=int(f_h['port']))
             
-        info('Adding SSLinks')
+        info('Adding SSLinks \n')
         for i in range(0, len(fetched_links)):
             f_l = fetched_links[i]
             src_switch = self.get_switch_idx_by_id(self.switches, fetched_switches, f_l['src_switch'])
@@ -196,10 +199,67 @@ class NetworkGraph:
                 print(f"Error occurred: switch idx-s are {src_switch}, {dst_switch}")
             self.net.addLink(self.switches[src_switch], self.switches[dst_switch],
                         port1=int(f_l['src_port']), port2=int(f_l['dst_port']))
-        
+
+        info('Building NX Graph \n')
+        self.build_nx_graph()
+
         info('Starting Network \n')
         for s in self.switches:
             s.start([c0])
+
+    def build_nx_graph(self):
+        # Build the network graph using NetworkX
+        self.G = nx.Graph()
+        for link in self.net.links:
+            src = link.intf1.node
+            dst = link.intf2.node
+            self.G.add_edge(src, dst)
+
+    def get_all_paths(self, src_host, dst_host):
+        return list(nx.all_simple_paths(self.G, source=src_host, target=dst_host))
+
+    def get_path_tot_cost(self, path):
+        total_cost = 0
+        links = self.get_links(path)
+        print(f'{links=}')
+        for link in links:
+            switch_dpid = link['src_switch']
+            port_id = link['src_port']
+            total_cost += self.get_cost(switch_dpid, port_id)
+        return total_cost
+
+    def get_links(self, path):
+        links = []
+        print(f"parsed_links:\n{self.parsed_links}")
+        print(f"switches:\n{self.switches}")
+        print(f"parsed_switches:\n{self.parsed_switches}")
+
+        for i in range(len(path) - 1):
+            link = self.get_link(path[i], path[i + 1])
+            if link:
+                links.append(link)
+        return links
+
+    def get_link(self, src_switch, dst_switch):
+        src_name = str(src_switch).split(':')[0].split()[-1]
+        dst_name = str(dst_switch).split(':')[0].split()[-1]
+        print(f"from {src_name=} to {dst_name=}")
+
+        # Parse the fetched links to find the link between src_switch and dst_switch
+        for link in self.parsed_links:
+            if link['src_switch'] == self.get_switch_dpid_by_name(src_name) and link[
+                'dst_switch'] == self.get_switch_dpid_by_name(dst_name):
+                return link
+        return None  # Return None if no link is found
+
+    def get_switch_dpid_by_name(self, name):
+        print(f"get_switch_dpid for {name=}")
+        ss = self.switches
+        for i in range(0, len(ss)):
+            if ss[i].name == name:
+                return self.parsed_switches[i]['switch_dpid']
+
+        return None
         
     @staticmethod
     def get_switch_idx_by_id(switches, fetched_switches, dpid):
