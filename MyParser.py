@@ -3,7 +3,8 @@ from NetworkGraph import NetworkGraph
 from AppServer import AppServerHandler
 import networkx as nx
 from http.server import HTTPServer
-import threading
+
+from test_topo import TestTopo
 
 # Define the controller's IP and port (assuming it's running locally)
 CONTROLLER_IP = "127.0.0.1"
@@ -96,18 +97,17 @@ class CustomCLI(CLI):
 class Framework:
     def start_server(self):
         AppServerHandler.MyParser = self
-        server_address = ('127.0.0.1', 8000)
+        server_address = ('10.0.0.5', 8000)
         httpd = HTTPServer(server_address, AppServerHandler)
         print(f"Starting AppServer")
         httpd.serve_forever()
 
+    def start_test_topo(self):
+        test_topo = TestTopo()
+        test_topo.init_test_topo()
 
     def main(self):
-        # Start the server in a separate thread
-        server_thread = threading.Thread(target=self.start_server)
-        server_thread.daemon = True  # Daemonize thread to stop with main program
-        server_thread.start()
-        print("AppServer started in background.")
+        self.start_test_topo()
 
         topo = NetworkGraph(controller_ip=CONTROLLER_IP, controller_port=CONTROLLER_PORT)
         topo.create_topo()

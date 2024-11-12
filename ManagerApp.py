@@ -28,20 +28,30 @@ def estimate_candidate_pathes( task, paths ):
         
 
 class ManagerApp:
-    self. CONTROLLER_IP   = None
-    self. CONTROLLER_PORT = None
-    
-    self. controller_url  = None
-    self. network_graph   = None
-    
-    self. devices = None # map < device id#, ip address >
-    self. servers = None # map < server id#, ip address >
+    def __init__(self, controller_ip, controller_port):
+        self. CONTROLLER_IP   = None
+        self. CONTROLLER_PORT = None
 
-    self. priority_table = None # map < device id#, priority >
-    self. resource_table = None # map < server id#, tuple < CPU, MEM > > 
-   
-    self. device_task_table = None # map < device id#, list <tasks> >  
-    self. server_task_table = None # map < server id#, list <tasks> >
+        self. controller_url  = None
+        self. network_graph   = None
+
+        self. devices = None # map < device id#, ip address >
+        self. servers = None # map < server id#, ip address >
+
+        self. priority_table = None # map < device id#, priority >
+        self. resource_table = None # map < server id#, tuple < CPU, MEM > >
+
+        self. device_task_table = None # map < device id#, list <tasks> >
+        self. server_task_table = None # map < server id#, list <tasks> >
+
+        self.CONTROLLER_IP = controller_ip
+        self.CONTROLLER_PORT = controller_port
+        self.controller_url = f"http://{controller_ip}:{controller_port}"
+
+        self.retrieve_network_graph()
+        self.retrieve_host_info()
+        self.retrieve_device_task_table()
+        self.retrieve_server_task_table()
 
     def retrieve_network_graph( self ):
         self. network_graph = NetworkGraph( self. controller_url )
@@ -49,7 +59,7 @@ class ManagerApp:
         
         # TODO:
         # convert the NetworkGraph. net to networkx graph
-        # change NetworkGraph to store only the sontroler_url ip and port is stored in ManagerApp
+        # change NetworkGraph to store only the controler_url ip and port is stored in ManagerApp
 
     def retrieve_host_info( self ):
         self. devices = {}
@@ -77,16 +87,6 @@ class ManagerApp:
             # send HTTP 'task list request' message to self. servers[s_id]
             reply = # HTTP responce is list of task the server is assigned for
             self. server_task_table[s_id] = reply
-    
-    def __init__( self, controller_ip, controller_port ):
-        self. CONTROLLER_IP = controller_ip
-        self. CONTROLLER_PORT = controller_port
-        self. controller_url  = f"http://{controller_ip}:{controller_port}"
-        
-        self. retrieve_network_graph( )
-        self. retrieve_host_info( )
-        self. retrieve_device_task_table( )
-        self. retrieve_server_task_table( )
 
     def update_network_state( self ):
         self. retrieve_network_graph( )
@@ -107,7 +107,7 @@ class ManagerApp:
                 latencies[-1] += estimate_data_transfer_latency( task, path )
                 latencies[-1] += estimate_task_processing_latency( task, self. resource_table[s_id] )
 
-            if min( latency ) <= task[-1]:
+            if min( latencies ) <= task[-1]:
                 latency = min(latencies)
                 path = candidate_paths[ latencies. index(latency) ]
                 candidate_servers[s_id] = ( latency, path )
@@ -115,7 +115,8 @@ class ManagerApp:
         return candidate_servers
 
     def run( self ):
-        TODO
+        #TODO
+        pass
 
 
 
