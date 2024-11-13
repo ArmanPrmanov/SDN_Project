@@ -4,6 +4,14 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from queue import Queue
 import requests
 import json
+from NetworkGraph import NetworkGraph
+
+# TODO: Replace later with real class
+class ManagerApp:
+    net_graph = None
+    
+    def __init__(self):
+        self.net_graph = NetworkGraph()
 
 class AppServerHandler(BaseHTTPRequestHandler):
     Framework = None
@@ -11,6 +19,7 @@ class AppServerHandler(BaseHTTPRequestHandler):
     get_request_queue = Queue()
     post_request_queue = Queue()
     response_dict = {}
+    man_app = ManagerApp()
 
     def do_GET(self):
         # Queue the request and wait for a response
@@ -48,6 +57,13 @@ class AppServerHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(responses).encode("utf-8"))
+        elif self.path == '/topo':
+            # Respond with a JSON message for the status check
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            response = {"data": self.man_app.net_graph.CONTROLLER_IP}
+            self.wfile.write(json.dumps(response).encode("utf-8"))
         else:
             # Handle undefined endpoints
             self.send_response(404)

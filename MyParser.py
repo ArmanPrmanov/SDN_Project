@@ -109,13 +109,13 @@ class Framework:
     def main(self):
         self.start_test_topo()
 
-        topo = NetworkGraph(controller_ip=CONTROLLER_IP, controller_port=CONTROLLER_PORT)
-        topo.create_topo()
-        topo.enable_statistics()
-        
-        # Use the custom CLI with additional commands
-        custom_cli = CustomCLI(topo)
-        custom_cli.run()
+        # topo = NetworkGraph(controller_ip=CONTROLLER_IP, controller_port=CONTROLLER_PORT)
+        # topo.create_topo()
+        # topo.enable_statistics()
+        #
+        # # Use the custom CLI with additional commands
+        # custom_cli = CustomCLI(topo)
+        # custom_cli.run()
 
 
 if __name__ == "__main__":
