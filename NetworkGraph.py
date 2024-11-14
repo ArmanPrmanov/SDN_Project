@@ -11,9 +11,6 @@ class NetworkGraph:
         self.CONTROLLER_IP = controller_ip
         self.CONTROLLER_PORT = controller_port
         self.BASE_URL = f"http://{self.CONTROLLER_IP}:{self.CONTROLLER_PORT}"
-
-        self.NEW_IP = "127.0.0.2"
-        self.NEW_PORT = "8080"
         
         self.SWITCH_PROTOCOL = 'OpenFlow13'
         
@@ -203,9 +200,9 @@ class NetworkGraph:
         info('Building NX Graph \n')
         self.build_nx_graph()
 
-        info('Starting Network \n')
-        for s in self.switches:
-            s.start([c0])
+        # info('Starting Network \n')
+        # for s in self.switches:
+        #     s.start([c0])
 
     def build_nx_graph(self):
         # Build the network graph using NetworkX

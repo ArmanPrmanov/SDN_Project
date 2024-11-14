@@ -39,7 +39,7 @@ class TestTopo:
         net.addLink(s3, s4)
         net.addLink(s4, s1)
 
-        info('Add host for app')
+        info('Add host for app \n')
         h5 = net.addHost('h5', ip='10.0.0.5')
         net.addLink(h5, s1)
 
@@ -51,6 +51,7 @@ class TestTopo:
 
         self.test_topo = net
 
+        nat = net.addNAT().configDefault()
         net.start()
 
         #List of (host, IP) tuples
@@ -72,7 +73,7 @@ class TestTopo:
 
         info(f'Starting AppServer on {h5} with IP 10.0.0.5\n')
         h5_IP = '10.0.0.5'
-        h5.popen(f'python3 AppServer.py {h5_IP}\n')
+        h5.popen(f'python3 AppServer.py {h5_IP}')
 
         CLI(net)
         net.stop()

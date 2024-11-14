@@ -1,7 +1,8 @@
 import requests
 import json
 import networkx
-import NetworkGraph
+import asyncio
+from NetworkGraph import NetworkGraph
 
 def estimate_data_transfer_latency( task, path ):
     latency = 0.0
@@ -22,18 +23,18 @@ def estimate_task_processing_latency( task, resource ):
         
     return d_cpu / r_cpu
 
-def estimate_candidate_pathes( task, paths ):
+def estimate_candidate_paths( task, paths ):
     for path in paths:
-        latency = estimate_data_transfer_latency
+        latency = estimate_data_transfer_latency(task, path)
         
 
 class ManagerApp:
-    def __init__(self, controller_ip, controller_port):
-        self. CONTROLLER_IP   = None
-        self. CONTROLLER_PORT = None
+    network_graph = None
 
-        self. controller_url  = None
-        self. network_graph   = None
+    def __init__(self):
+        self. CONTROLLER_IP   = '127.0.0.1'
+        self. CONTROLLER_PORT = '8080'
+        self. controller_url  = f'http://{self.CONTROLLER_IP}:{self.CONTROLLER_PORT}'
 
         self. devices = None # map < device id#, ip address >
         self. servers = None # map < server id#, ip address >
@@ -44,29 +45,16 @@ class ManagerApp:
         self. device_task_table = None # map < device id#, list <tasks> >
         self. server_task_table = None # map < server id#, list <tasks> >
 
-        self.CONTROLLER_IP = controller_ip
-        self.CONTROLLER_PORT = controller_port
-        self.controller_url = f"http://{controller_ip}:{controller_port}"
-
-        self.retrieve_network_graph()
-        self.retrieve_host_info()
-        self.retrieve_device_task_table()
-        self.retrieve_server_task_table()
-
     def retrieve_network_graph( self ):
-        self. network_graph = NetworkGraph( self. controller_url )
+        self. network_graph = NetworkGraph()
         self. network_graph. create_topo( )
-        
-        # TODO:
-        # convert the NetworkGraph. net to networkx graph
-        # change NetworkGraph to store only the controler_url ip and port is stored in ManagerApp
 
     def retrieve_host_info( self ):
         self. devices = {}
         self. servers = {}
-        for host in self. network_graph. pars_hosts( ):
+        for host in self. network_graph.parsed_hosts:
             # send HTTP 'status request' message to host
-            reply = # reply should contain device class and relevant information
+            reply = {}# reply should contain device class and relevant information
             if reply['class'] == 'device':
                 self. devices[ reply['id'] ] = host['ipv4']
                 self. priority_table[ reply['id'] ] = reply['priority']
@@ -78,14 +66,14 @@ class ManagerApp:
         self. device_task_table = {}
         for d_id in self. devices:
             # send HTTP 'task list request' message to self. devices[d_id]
-            reply = # HTTP responce is list of taks the device is waiting for
+            reply = []# HTTP response is list of tasks the device is waiting for
             self. device_task_table[d_id] = reply
             
     def retrieve_server_task_table( self ):
         self. server_task_table = {}
         for s_id in self. servers:
             # send HTTP 'task list request' message to self. servers[s_id]
-            reply = # HTTP responce is list of task the server is assigned for
+            reply = []# HTTP response is list of task the server is assigned for
             self. server_task_table[s_id] = reply
 
     def update_network_state( self ):
@@ -98,7 +86,7 @@ class ManagerApp:
         candidate_servers = { } # map < server id#, tuple < latency, path > >
         
         for s_id in self. servers:
-            candidate_paths = # find all condidate paths between self. devices[device_id] and self. servers[s_id]
+            candidate_paths = []# find all candidate paths between self. devices[device_id] and self. servers[s_id]
             # estimate data transfer latency up and down stream
 
             latencies = []
@@ -113,10 +101,6 @@ class ManagerApp:
                 candidate_servers[s_id] = ( latency, path )
         
         return candidate_servers
-
-    def run( self ):
-        #TODO
-        pass
 
 
 

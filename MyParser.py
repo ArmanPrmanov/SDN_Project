@@ -1,9 +1,5 @@
 from mininet.cli import CLI
-from NetworkGraph import NetworkGraph
-from AppServer import AppServerHandler
 import networkx as nx
-from http.server import HTTPServer
-
 from test_topo import TestTopo
 
 # Define the controller's IP and port (assuming it's running locally)
@@ -95,13 +91,6 @@ class CustomCLI(CLI):
 
 
 class Framework:
-    def start_server(self):
-        AppServerHandler.MyParser = self
-        server_address = ('10.0.0.5', 8000)
-        httpd = HTTPServer(server_address, AppServerHandler)
-        print(f"Starting AppServer")
-        httpd.serve_forever()
-
     def start_test_topo(self):
         test_topo = TestTopo()
         test_topo.init_test_topo()

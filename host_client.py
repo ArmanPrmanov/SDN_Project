@@ -1,7 +1,6 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import random
-import re
 import requests
 import sys
 
@@ -17,38 +16,81 @@ pending_tasks = [Task(task_id=i) for i in range(1, 6)]  # Initialize with sample
 
 class HostClientHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if re.search('/api/get/*', self.path):
-            webhook = self.path.split('/')[-1]
+        if self.path == "/status":
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
 
-            if webhook == "status":
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
+            # JSON response for the status
+            status_body = {
+                "class": "device",
+                "id": device_id,
+                "priority": host_priority
+            }
+            status_body_json = json.dumps(status_body).encode('utf-8')
+            self.wfile.write(status_body_json)
 
-                # JSON response for the status
-                status_body = {
-                    "class": "device",
-                    "id": device_id,
-                    "priority": host_priority
+        elif self.path == "/tasks":
+            # New "tasks" endpoint for task list
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+
+            # Create a dictionary with indexed tasks
+            tasks_dict = {i: str(task) for i, task in enumerate(pending_tasks)}
+            tasks_json = json.dumps(tasks_dict).encode('utf-8')
+            self.wfile.write(tasks_json)
+
+        elif self.path == "/upload-task":
+            # Select a task and define the data string
+            task = pending_tasks[0]  # For example, selecting the first task
+            data_string = "Sample Data String"
+
+            # Ask AppServer of MEC server
+            app_payload = {
+                "task": {
+                    "id": task.task_id,
+                    "cpu_cycles": task.cpu_cycles,
+                    "memory": task.memory
                 }
-                status_body_json = json.dumps(status_body).encode('utf-8')
-                self.wfile.write(status_body_json)
+            }
 
-            elif webhook == "tasks":
-                # New "tasks" endpoint for task list
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
+            # Send request to AppServer
+            app_server_url = "http://10.0.0.5:8000/get-mec"
+            app_response = requests.post(app_server_url, json=app_payload)
 
-                # Create a dictionary with indexed tasks
-                tasks_dict = {i: str(task) for i, task in enumerate(pending_tasks)}
-                tasks_json = json.dumps(tasks_dict).encode('utf-8')
-                self.wfile.write(tasks_json)
+            app_response_json = app_response.json()
+            mec_ip = app_response_json['data']
 
-            else:
-                self.send_response(404, f'Not Found webhook {webhook}')
+            # Prepare JSON payload for MEC server
+            mec_payload = {
+                "task": {
+                    "id": task.task_id,
+                    "cpu_cycles": task.cpu_cycles,
+                    "memory": task.memory
+                },
+                "data": data_string
+            }
+
+            # Send request to MEC server
+            mec_server_url = f'http://{mec_ip}:8000/exec-task'
+            mec_response = requests.post(mec_server_url, json=mec_payload)
+
+            # Respond based on MEC server response
+            self.send_response(mec_response.status_code)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(mec_response.content)
+
+
         else:
-            self.send_response(403)
+            # Handle undefined endpoints
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b"Not Found")
+
+    def do_POST(self):
+        self.send_response(404)
         self.end_headers()
 
     def post_resource_request(self, task):
